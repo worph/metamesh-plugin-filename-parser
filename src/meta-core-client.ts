@@ -1,6 +1,6 @@
 /**
  * meta-core API Client for writing metadata
- * Fails gracefully if meta-core is unavailable (logs warning, returns without throwing)
+ * Fails gracefully if meta-core is unavailable (returns without throwing)
  */
 
 export class MetaCoreClient {
@@ -9,8 +9,8 @@ export class MetaCoreClient {
     private async safeFetch(url: string, options: RequestInit): Promise<Response | null> {
         try {
             return await fetch(url, { ...options, signal: AbortSignal.timeout(5000) });
-        } catch (error) {
-            console.warn(`[MetaCoreClient] Warning: meta-core unavailable at ${this.baseUrl}`);
+        } catch {
+            // meta-core unavailable - fail silently (expected in standalone/test mode)
             return null;
         }
     }
