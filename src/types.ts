@@ -41,7 +41,8 @@ export interface HealthResponse {
 export interface ProcessRequest {
     taskId: string;
     cid: string;
-    filePath: string;
+    /** Optional: falls back to existingMeta.fileName as the name to parse. */
+    filePath?: string;
     callbackUrl: string;
     metaCoreUrl: string;
     existingMeta?: Record<string, string>;

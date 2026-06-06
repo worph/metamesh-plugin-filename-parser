@@ -35,8 +35,12 @@ app.post<{ Body: ConfigureRequest }>('/configure', async (request): Promise<Conf
     return { status: 'ok' };
 });
 app.post<{ Body: ProcessRequest }>('/process', async (request, reply) => {
-    const { taskId, cid, filePath, callbackUrl, metaCoreUrl } = request.body;
-    if (!taskId || !cid || !filePath || !callbackUrl || !metaCoreUrl) {
+    // filePath is optional: the parser works on a name string, which may be
+    // supplied either as filePath or via existingMeta.fileName (the gateway
+    // feeder path, where no file exists on disk). The required wire fields are
+    // the write target (cid) + the callback/meta-core plumbing.
+    const { taskId, cid, callbackUrl, metaCoreUrl } = request.body;
+    if (!taskId || !cid || !callbackUrl || !metaCoreUrl) {
         return reply.send({ status: 'rejected', error: 'Missing required fields' } as ProcessResponse);
     }
     processFile(request.body, async (payload: CallbackPayload) => {

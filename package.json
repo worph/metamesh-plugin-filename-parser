@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "fastify": "^5.0.0",
-    "@metazla/filename-tools": "github:worph/filename-tool"
+    "@metazla/filename-tools": "file:vendor/filename-tools.tgz"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

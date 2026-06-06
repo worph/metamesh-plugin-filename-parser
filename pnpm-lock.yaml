@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@metazla/filename-tools':
-        specifier: github:worph/filename-tool
-        version: https://codeload.github.com/worph/filename-tool/tar.gz/8a9c357c8af20bf7af040985993f5f78d1aa5251
+        specifier: file:vendor/filename-tools.tgz
+        version: file:vendor/filename-tools.tgz
       fastify:
         specifier: ^5.0.0
         version: 5.7.4
@@ -193,8 +193,8 @@ packages:
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
 
-  '@metazla/filename-tools@https://codeload.github.com/worph/filename-tool/tar.gz/8a9c357c8af20bf7af040985993f5f78d1aa5251':
-    resolution: {tarball: https://codeload.github.com/worph/filename-tool/tar.gz/8a9c357c8af20bf7af040985993f5f78d1aa5251}
+  '@metazla/filename-tools@file:vendor/filename-tools.tgz':
+    resolution: {integrity: sha512-S20j5k3Ga2Dn8c2fThKmWsGjPzmb4Ckr/OTFjG5WQX1Ua1ry8X88/Cfql+AYaNGCjTbgIG51T4SbIMgGd285XA==, tarball: file:vendor/filename-tools.tgz}
     version: 1.0.0
 
   '@pinojs/redact@0.4.0':
@@ -953,7 +953,7 @@ snapshots:
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
 
-  '@metazla/filename-tools@https://codeload.github.com/worph/filename-tool/tar.gz/8a9c357c8af20bf7af040985993f5f78d1aa5251':
+  '@metazla/filename-tools@file:vendor/filename-tools.tgz':
     dependencies:
       file-type: 19.6.0
       franc: 6.2.0

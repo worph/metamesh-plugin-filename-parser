@@ -4,6 +4,7 @@
  * Uses @metazla/filename-tools library for parsing
  */
 
+import { env } from 'node:process';
 import type { PluginManifest, ProcessRequest, CallbackPayload } from './types.js';
 import { MetaCoreClient } from './meta-core-client.js';
 import {
@@ -38,6 +39,16 @@ export const manifest: PluginManifest = {
     config: {},
 };
 
+/**
+ * Emit the title-derived release tags (quality / codec / languages) added in the
+ * filename-tools lib. **Opt-in (default off)** because these are title *guesses*:
+ * in meta-sort the authoritative values come from probing the real stream
+ * (ffmpeg / language plugin), and a title-guessed `languages/<iso>` set member
+ * would pollute that. Gateway feeders (no real file) enable it via
+ * `EMIT_TITLE_TAGS=true`; meta-sort leaves it off. (`real-probe > title-guess`.)
+ */
+const EMIT_TITLE_TAGS = /^(1|true|yes)$/i.test(env.EMIT_TITLE_TAGS ?? '');
+
 // Create extractor instance with default config
 const extractor = new FileNameVideoMetaExtractor(
     [], // watchFolderList - empty for plugin context
@@ -60,8 +71,22 @@ export async function process(
     try {
         const { cid, filePath } = request;
 
+        // The parser operates on a name string. Accept it via filePath or, when
+        // the caller has no file on disk (gateway feeder path), via
+        // existingMeta.fileName. Skip cleanly if neither is present.
+        const nameToParse = filePath || request.existingMeta?.fileName;
+        if (!nameToParse) {
+            await sendCallback({
+                taskId: request.taskId,
+                status: 'skipped',
+                duration: Date.now() - startTime,
+                reason: 'No filePath or existingMeta.fileName to parse',
+            });
+            return;
+        }
+
         // Use the library to extract metadata
-        const metadata = extractor.extractVideoFileMetadata(filePath);
+        const metadata = extractor.extractVideoFileMetadata(nameToParse);
 
         // Convert to record for merging
         const result: Record<string, string> = {};
@@ -72,6 +97,25 @@ export async function process(
         if (metadata.movieYear) result.movieYear = metadata.movieYear;
         if (metadata.videoType) result.videoType = metadata.videoType;
         if (metadata.extra) result.extra = metadata.extra;
+
+        // Title-derived release tags — opt-in (see EMIT_TITLE_TAGS). quality /
+        // codec are scalars; languages is a `languages/<iso> = "true"` key-set
+        // (METADATA_KEYS §1), the same shape gateway feeders + meta-watch use.
+        if (EMIT_TITLE_TAGS) {
+            if (metadata.quality) result.quality = metadata.quality;
+            if (metadata.codec) result.codec = metadata.codec;
+            for (const lang of metadata.languages ?? []) {
+                result[`languages/${lang}`] = 'true';
+            }
+            // contentKind mirrors videoType (movie→movie, tvshow→episode).
+            // Gateway feeders retire their Rust filename port and rely on this
+            // plugin as the sole filename source, so it owns this derivation
+            // too (meta-watch reads contentKind to detect/aggregate episodes).
+            // Gated with the other title-derived tags so meta-sort (the real
+            // file is the authority there, flag off) is unaffected.
+            if (metadata.videoType === 'tvshow') result.contentKind = 'episode';
+            else if (metadata.videoType === 'movie') result.contentKind = 'movie';
+        }
 
         if (Object.keys(result).length > 0) {
             await metaCore.mergeMetadata(cid, result);

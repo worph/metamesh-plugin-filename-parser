@@ -12,13 +12,16 @@ RUN npm install -g corepack@latest && corepack enable
 
 WORKDIR /app
 
-# Copy package files first for layer caching
+# Copy package files first for layer caching. vendor/ holds the locally-built
+# @metazla/filename-tools tarball (file: dep) — replaces github:worph/filename-tool
+# so local lib changes ship without a GitHub push. The tarball is pre-built
+# (dist/ included), so no in-place rebuild step is needed. --no-frozen-lockfile
+# because the committed lockfile still pins the old github tarball; pnpm
+# reconciles it to the file: dep at build time.
 COPY package.json pnpm-lock.yaml ./
+COPY vendor/ ./vendor/
 RUN corepack install
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-
-# Build the git dependency (filename-tools)
-RUN cd node_modules/@metazla/filename-tools && pnpm install && pnpm run build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile
 
 # Copy source and build
 COPY tsconfig.json ./
@@ -38,11 +41,9 @@ RUN npm install -g corepack@latest && corepack enable
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml ./
+COPY vendor/ ./vendor/
 RUN corepack install
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --prod
-
-# Build the git dependency in production too
-RUN cd node_modules/@metazla/filename-tools && pnpm install && pnpm run build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --no-frozen-lockfile --prod
 
 COPY --from=builder /app/dist ./dist
 
