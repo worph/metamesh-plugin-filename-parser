@@ -1,8 +1,11 @@
 node_modules/
 dist/
 # Locally-built @metazla/filename-tools tarball (vendored file: dep; rebuilt from
-# packages/filename-tool — see Dockerfile note). Build artifact, not source.
-vendor/
+# packages/filename-tool — see Dockerfile note). The tarball itself MUST be
+# committed: the Dockerfile `COPY vendor/` needs it at build time, and CI has no
+# other source for it. Ignore everything else under vendor/.
+vendor/*
+!vendor/filename-tools.tgz
 *.log
 .env
 .DS_Store
