@@ -113,8 +113,20 @@ export async function process(
             // too (meta-watch reads contentKind to detect/aggregate episodes).
             // Gated with the other title-derived tags so meta-sort (the real
             // file is the authority there, flag off) is unaffected.
-            if (metadata.videoType === 'tvshow') result.contentKind = 'episode';
-            else if (metadata.videoType === 'movie') result.contentKind = 'movie';
+            // `domain` travels with `contentKind` — whoever writes one writes
+            // the other (METADATA_KEYS.md §1). It is what every client filters
+            // its wall on, and a record with a kind but no domain is invisible
+            // to all of them. Stamped literally rather than through
+            // filename-tool's `domainForContentKind` because this plugin
+            // vendors that package as a tarball; the two kinds here are the
+            // whole table's video half anyway.
+            if (metadata.videoType === 'tvshow') {
+                result.contentKind = 'episode';
+                result.domain = 'tv';
+            } else if (metadata.videoType === 'movie') {
+                result.contentKind = 'movie';
+                result.domain = 'film';
+            }
         }
 
         if (Object.keys(result).length > 0) {
